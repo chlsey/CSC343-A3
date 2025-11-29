@@ -222,9 +222,7 @@ CREATE DOMAIN rating AS smallint
 
 
 -- The rating of the host for a stay.
--- <guest_id> denotes the id of the renter.
--- <reservation_id> denotes the id of the reservation.
--- <host_id> denotes the id of the host.
+-- <stay_id> denotes id of a stay.
 -- <star_rating> denotes the rating of the host out of 5.
 CREATE TABLE RatingHost(
     stay_id INTEGER PRIMARY KEY REFERENCES OfficialRenter,
@@ -233,9 +231,8 @@ CREATE TABLE RatingHost(
 
 
 -- The rating of the property for a stay.
+-- <stay_id> denotes id of a stay.
 -- <rating_id> denotes the rating id of the rating.
--- <guest_id> denotes the id of the renter.
--- <reservation_id> denotes the id of the reservation.
 -- <star_rating> denotes the rating of the host out of 5.
 CREATE TABLE RatingProperty(
     stay_id INTEGER PRIMARY KEY REFERENCES Stay,
