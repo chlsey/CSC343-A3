@@ -1,3 +1,66 @@
+/*
+Task 2:
+
+==Could not==
+We couldn't enforce the following constraints:
+- The constraint that every property must have at least one luxury 
+    (by enforcing that each property_id in Property is in Luxuries). 
+
+- The constraint that the number of guests for a reservation is less than
+    the capacity of the property that is reserved (in table Reservation).
+
+- The constraint that the age of the renter of the property/reservation
+     is 18 by the start date of the reservation.
+
+- The constraint for Prices that the price_date for a price update
+    occurs only at the beginning of the week (on a Saturday).
+
+
+
+==Did not==
+- We did not do any implementations w.r.t. the fact that a week starts on
+    a Saturday since it's unclear whether a reservation should always 
+    start on a Saturday, or end on a Friday. 
+
+- We did not implement anything to ensure that the renter is in charge of 
+    taking care of the property since the instruction was too vague.
+
+
+
+==Extra Constraints==
+- Every recorded price in Prices is at the start of a week (couldn't 
+    actually implement this). We wanted to implement this so that prices are
+    not too unstable, which would make it hard to pay for the rental.
+
+- The renter cannot leave a comment on a host, only a rating. We enforced this
+    because the guest can just leave a comment on the host in the property 
+    comment rating.
+
+
+==Assumptions==
+We made the following assumptions:
+- The end date of the rental does not have to end on a Friday 
+    (last day of the week).
+
+- The start date of a rental period does not have to start on a Saturday.
+
+- We only keep track of property prices per week at the start of the week, 
+    so prices for properties cannot change in the middle of a week.
+
+- Billing information is not recorded in the Reservation table nor 
+    OfficialRenter since it's unclear whether renters pay before 
+    rental period is over, or if prices can change throughout the 
+    actual rental period.
+
+- A property does not have to be a City Property or a Water Property.
+
+- Guests can give a rating of 0.
+
+- The renter does not need to leave a comment on a host.
+
+*/
+
+
 
 DROP SCHEMA IF EXISTS luxuryRentals cascade;
 CREATE SCHEMA luxuryRentals;
@@ -29,15 +92,19 @@ CREATE TABLE Property (
     address VARCHAR NOT NULL
 );
 
+-- ADDITIONAL CONSTRAINT: property_id must be in Luxuries.
+
 
 -- A city property and its features.
 -- <property_id> denotes the id of the property
--- <transit> denotes type of transit closest to the properties (bus, LRT, subway or none/NULL)
+-- <transit> denotes type of transit closest to the properties.
+-- <transit> must be in (bus, LRT, subway or none/NULL).
 -- <walkability_score> denotes how walkable property is (range from 0-100) 
 CREATE TABLE CityType (
     property_id INTEGER PRIMARY KEY REFERENCES Property,
     transit VARCHAR CHECK (transit IN ('bus', 'LRT', 'subway')) DEFAULT NULL,
-    walkability_score INTEGER NOT NULL CHECK (walkability_score >= 0 AND walkability_score <= 100)
+    walkability_score INTEGER NOT NULL 
+    CHECK (walkability_score >= 0 AND walkability_score <= 100)
 );
 
 
@@ -47,7 +114,8 @@ CREATE TABLE CityType (
 -- <lifeguard> denotes wehther water type property has a lifeguard.
 CREATE TABLE WaterType (
     property_id INTEGER NOT NULL REFERENCES Property,
-    water_type VARCHAR NOT NULL CHECK (water_type IN ('beach', 'lake', 'pool')), 
+    water_type VARCHAR NOT NULL 
+    CHECK (water_type IN ('beach', 'lake', 'pool')), 
     lifeguard BOOL NOT NULL,
     PRIMARY KEY (property_id, water_type)
 );
@@ -68,8 +136,13 @@ CREATE TABLE Luxuries (
     laundry BOOL NOT NULL,
     daily_cleaning BOOL NOT NULL,
     daily_breakfast BOOL NOT NULL,
-    concierge BOOL NOT NULL
+    concierge BOOL NOT NULL, 
+    CONSTRAINT luxuries_at_least_one CHECK (
+        hot_tub OR sauna OR laundry OR daily_cleaning 
+        OR daily_breakfast OR concierge
+    )
 );
+
 
 
 -- A reservation made for a property
@@ -92,11 +165,15 @@ CREATE TABLE Reservation (
 
 -- A table for the current prices of a property.
 -- <property_id> denotes the id of the property.
--- <rates> denotes the price of the property.
+-- <price_date> denotes the date of the price update for the property.
+-- <rates> denotes the per week rental price of the property.
 CREATE TABLE Prices (
-    property_id INTEGER PRIMARY KEY REFERENCES Property,
-    rates REAL NOT NULL
+    property_id INTEGER REFERENCES Property,
+    price_date TIMESTAMP NOT NULL,
+    rates REAL NOT NULL,
+    PRIMARY KEY(property_id, price_date)
 );
+-- ADDITIONAL CONSTRAINT: price_date can only be the date of a Saturday.
 
 
 -- Guest registered with luxuryRentals.
@@ -169,7 +246,7 @@ CREATE TABLE RatingProperty(
 
 -- The comments of the property for a rating.
 -- <rating_id> denotes the rating id of the rating.
--- <comment> denotes the comment left by guests who have already rated the property.
+-- <comment> denotes the comment left by guests who have already rated.
 CREATE TABLE CommentProperty(
     rating_id INTEGER PRIMARY KEY REFERENCES RatingProperty,
     comment VARCHAR NOT NULL
