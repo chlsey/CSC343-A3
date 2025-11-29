@@ -3,40 +3,51 @@ DROP SCHEMA IF EXISTS luxuryRentals cascade;
 CREATE SCHEMA luxuryRentals;
 SET search_path TO luxuryRentals, public;
 
+
+-- The Host of the property.
+-- <host_id> denotes the id of the host.
+-- <email_address> denotes the email address of the host.
+CREATE TABLE Host (
+    host_id INTEGER PRIMARY KEY,
+    email_address VARCHAR NOT NULL
+);
+
+
 -- A property that is listed on LuxuryRentals.com 
 -- <property_id> denotes the id of the property
--- <host_id> denotes the host of the property
+-- <host_id> denotes the id of the host.
 -- <num_bedroom> denotes the number of bedrooms in the property
 -- <num_bathroom> denotes the number of bathrooms in the property
 -- <capacity> denotes the maximum number of people that can sleep at the property
 -- <address> denotes the address of the property
 CREATE TABLE Property (
-    property_id INTEGER NOT NULL,
-    host_id INTEGER NOT NULL,
+    property_id INTEGER PRIMARY KEY,
+    host_id INTEGER REFERENCES Host,
     num_bedroom INTEGER NOT NULL, 
     num_bathroom INTEGER NOT NULL,
-    capacity INTEGER NOT NULL,
-    address VARCHAR NOT NULL,
-    PRIMARY KEY (property_id, host_id)
-); -- capacity >= num_bedroom
+    capacity INTEGER NOT NULL CHECK (capacity >= num_bedroom),
+    address VARCHAR NOT NULL
+);
 
--- A city property and it's features.
+
+-- A city property and its features.
 -- <property_id> denotes the id of the property
--- <transit> denotes type of transit closest to the properties (bus, LRT, subway or none)
+-- <transit> denotes type of transit closest to the properties (bus, LRT, subway or none/NULL)
 -- <walkability_score> denotes how walkable property is (range from 0-100) 
 CREATE TABLE CityType (
     property_id INTEGER PRIMARY KEY REFERENCES Property,
-    transit VARCHAR CHECK transit IN ('bus', 'LRT', 'subway') DEFAULT NULL,
-    walkability_score INTEGER NOT NULL,
+    transit VARCHAR CHECK (transit IN ('bus', 'LRT', 'subway')) DEFAULT NULL,
+    walkability_score INTEGER NOT NULL CHECK (walkability_score >= 0 AND walkability_score <= 100)
 );
 
--- A water property and it's features.
+
+-- A water property and its features.
 -- <property_id> denotes the id of the property.
--- <water_type> denotes the type for water properties (beach, lake or pond)
+-- <water_type> denotes the type for water properties (beach, lake or pond).
 -- <lifeguard> denotes wehther water type property has a lifeguard.
 CREATE TABLE WaterType (
     property_id INTEGER NOT NULL REFERENCES Property,
-    water_type VARCHAR NOT NULL, 
+    water_type VARCHAR NOT NULL CHECK (water_type IN ('beach', 'lake', 'pool')), 
     lifeguard BOOL NOT NULL,
     PRIMARY KEY (property_id, water_type)
 );
@@ -44,8 +55,12 @@ CREATE TABLE WaterType (
 
 -- A property's list of luxuries
 -- <property_id> denotes the id of the property.
--- <hot tub>
--- , sauna, laundry, daily cleaning, daily breakfast, concierge
+-- <hot tub> denotes whether the property has a hot tub.
+-- <sauna> denotes whether the property has a sauna.
+-- <laundry> denotes whether the property has a laundry.
+-- <daily_cleaning> denotes whether the property has daily cleaning.
+-- <daily_breakfast> denotes whether the property has daily breakfast delivery.
+-- <concierge> denotes whether the property has concierge service.
 CREATE TABLE Luxuries (
     property_id INTEGER PRIMARY KEY REFERENCES Property,
     hot_tub BOOL NOT NULL,
@@ -60,58 +75,74 @@ CREATE TABLE Luxuries (
 -- A reservation made for a property
 -- <reservation_id> denotes id of the reservation.
 -- <property_id> denotes the id of the property.
--- <guest_id> denotes the id of the guest, who is the official renter.
--- <rental> denotes the number of weeks the property is rented for.
+-- <rental_weeks> denotes the number of weeks the property is rented for.
 -- <start_date> denotes the start date of the rental.
--- <end_date> denotes the end date of the rental.
+-- <rental_weeks> denotes the number of weeks for the rental.
 -- <num_guests> denotes how many guests are under this reservation.
 CREATE TABLE Reservation (
     reservation_id INTEGER PRIMARY KEY,
     property_id INTEGER NOT NULL,
-    renter_id INTEGER NOT NULL,
-    rental INTEGER NOT NULL,
     start_date TIMESTAMP NOT NULL,
-    end_date TIMESTAMP NOT NULL
-    num_guests INTEGER NOT NULL,
-    CONSTRAINT num_guests CHECK Property(property_id, capacity) 
+    rental_weeks INTEGER NOT NULL,
+    num_guests INTEGER NOT NULL CHECK (num_guests >= 0)
 );
 
--- Guest registered to stay at a property.
+-- ADDITIONAL CONSTRAINT: num_guests <= capacity of the property
+
+
+-- A table for the current prices of a property.
+-- <property_id> denotes the id of the property.
+-- <rates> denotes the price of the property.
+CREATE TABLE Prices (
+    property_id INTEGER PRIMARY KEY REFERENCES Property,
+    rates REAL NOT NULL
+);
+
+
+-- Guest registered with luxuryRentals.
 -- <guest_id> denotes the id of the guest.
--- <age> denotes age of the guest.
 -- <guest_name> denotes name of the guest.
 -- <address> denotes the address of the guest.
 -- <birth_date> denotes the birth date of the guest.
--- <reservation_id> denotes id of the reservation.
 CREATE TABLE Guest (
     guest_id INTEGER PRIMARY KEY,
-    age INTEGER NOT NULL,
     guest_name VARCHAR NOT NULL,
     address VARCHAR NOT NULL,
-    birth_date TIMESTAMP NOT NULL,
+    birth_date TIMESTAMP NOT NULL
+);
+
+
+-- Guest registered with a reservation.
+-- <stay_id> denotes id of a stay (a guest stayed at a reservation).
+-- <guest_id> denotes the id of the guest.
+-- <reservation_id> denotes id of the reservation.
+CREATE TABLE Stay (
+    stay_id INTEGER PRIMARY KEY,
+    guest_id INTEGER NOT NULL REFERENCES Guest,
     reservation_id INTEGER NOT NULL REFERENCES Reservation
 );
 
+
 -- The official renter registered to stay at a property.
--- <guest_id> denotes the id of the guest.
--- with the renter for this reservation.
--- <reservation_id> denotes the reservation_id for this renter.
+-- <stay_id> denotes id of a stay.
+-- <card_num> the credit card info of the renter.
 CREATE TABLE OfficialRenter (
-    reservation_id INTEGER PRIMARY KEY REFERENCES Reservation,
-    renter_id INTEGER NOT NULL REFERENCES Guest
-)
--- num_guest cannot exceeed capcacity of property of property_id in reservation_id
-
-
--- The Host of the property.
--- <host_id> denotes the id of the host.
--- <property_id> denotes the property owned by the host.
--- <email_address> denotes the email address of the host.
-CREATE TABLE Host (
-    host_id INTEGER PRIMARY KEY,
-    property_id INTEGER NOT NULL,
-    email_address VARCHAR NOT NULL
+    stay_id INTEGER PRIMARY KEY REFERENCES Stay,
+    card_num INTEGER NOT NULL
 );
+-- ADDITIONAL CONSTRAINT: age of (stay_id in Stay) renter must be 18 by 
+-- the start date of the reservation (stay_id in Stay).
+
+
+
+-- To do with Ratings
+
+-- The possible values of a rating.
+DROP DOMAIN IF EXISTS rating;
+CREATE DOMAIN rating AS smallint 
+    DEFAULT NULL
+    CHECK (VALUE >= 0 AND VALUE <= 5);
+
 
 -- The rating of the host for a stay.
 -- <guest_id> denotes the id of the renter.
@@ -119,24 +150,27 @@ CREATE TABLE Host (
 -- <host_id> denotes the id of the host.
 -- <star_rating> denotes the rating of the host out of 5.
 CREATE TABLE RatingHost(
-    guest_id INTEGER REFERENCES OfficialRenter,
-    reservation_id INTEGER PRIMARY KEY REFERENCES Reservation,
-    host_id INTEGER NOT NULL REFERENCES Host,
-    star_rating INTEGER NOT NULL CHECK (star_rating <= 5 AND star_rating >= 0),
-    PRIMARY KEY(guest_id, reservation_id),
-)
+    stay_id INTEGER PRIMARY KEY REFERENCES OfficialRenter,
+    star_rating rating NOT NULL
+);
+
 
 -- The rating of the property for a stay.
+-- <rating_id> denotes the rating id of the rating.
 -- <guest_id> denotes the id of the renter.
 -- <reservation_id> denotes the id of the reservation.
--- <star_rating> denotes the rating of the host out of 5, can be NULL if no one has rated it.
--- <comment> denotes the comment left by guests who have rated the property
+-- <star_rating> denotes the rating of the host out of 5.
 CREATE TABLE RatingProperty(
-    guest_id INTEGER NOT NULL,
-    reservation_id INTEGER NOT NULL REFERENCES Reservation,
-    star_rating INTEGER, 
-    comment VARCHAR, -- can only leave comment if star_rating !NULL
-    PRIMARY KEY(guest_id, reservation_id)
-)
+    stay_id INTEGER PRIMARY KEY REFERENCES Stay,
+    rating_id INTEGER NOT NULL UNIQUE,
+    star_rating rating NOT NULL
+);
 
 
+-- The comments of the property for a rating.
+-- <rating_id> denotes the rating id of the rating.
+-- <comment> denotes the comment left by guests who have already rated the property.
+CREATE TABLE CommentProperty(
+    rating_id INTEGER PRIMARY KEY REFERENCES RatingProperty,
+    comment VARCHAR NOT NULL
+);
