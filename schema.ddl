@@ -14,16 +14,13 @@ We couldn't enforce the following constraints:
 
 - The constraint that reservations dates for the same property cannot overlap.
 
--- The constraint that there must be one entry in the OfficialRenter table for 
+- The constraint that there must be one entry in the OfficialRenter table for 
     each reservation (reservation_id).
 
+- The constraint that the rental period must start on a Saturday.
 
 
 ==Did not==
-- We did not do any implementations w.r.t. the fact that a week starts on
-    a Saturday since it's unclear whether a reservation should always 
-    start on a Saturday, or end on a Friday. 
-
 - We did not implement anything to ensure that the renter is in charge of 
     taking care of the property since the instruction was too vague.
 
@@ -37,10 +34,10 @@ We couldn't enforce the following constraints:
 
 ==Assumptions==
 We made the following assumptions:
-- The end date of the rental does not have to end on a Friday 
-    (last day of the week).
+- The start date of a rental period must start on a Saturday.
 
-- The start date of a rental period does not have to start on a Saturday.
+- Renters are being billed per week, with the billing period always starting 
+    on the starting Saturday of the rental period.
 
 - We only keep track of billed prices by the week, so prices for properties 
     cannot change in the middle of a week.
@@ -156,15 +153,16 @@ CREATE TABLE Reservation (
 -- ADDITIONAL CONSTRAINTS: num_guests <= capacity of the property
 -- Reservations for the same property cannot overlap in time.
 -- There must be one entry in the OfficialRenter table for reservation_id.
+-- start_date must be on a Saturday (the start of the week).
+-- For completed rentals, there is exactly rental_weeks entries in Billing.
 
 
 -- A table for the current prices of a property.
 -- <property_id> denotes the id of the property.
 -- <rates> denotes the per week rental price of the property.
 CREATE TABLE Prices (
-    property_id INTEGER REFERENCES Property,
+    property_id INTEGER PRIMARY KEY REFERENCES Property,
     rates REAL NOT NULL,
-    PRIMARY KEY(property_id, price_date)
 );
 
 
@@ -172,15 +170,18 @@ CREATE TABLE Prices (
 -- <billing_id> denotes the unique identifier for each billing record.
 -- <reservation_id> denotes the reservation this billing entry belongs to.
 -- <week_start> denotes the start date of the billed week.
--- <week_end> denotes the end date of the billed week.
 -- <price> denotes the price charged for this specific week.
 CREATE TABLE Billing (
     billing_id INTEGER PRIMARY KEY,
     reservation_id INTEGER REFERENCES Reservation,
     week_start DATE NOT NULL,
-    week_end DATE NOT NULL,
     price REAL NOT NULL CHECK (price >= 0)
 );
+
+-- ADDITIONAL CONSTRAINTS: week_start must be on a Saturday.
+-- The earliest week_start must be the same date as the start date for the
+-- reservation. There should be an entry in Billing per week until the rental 
+-- is completed since the earliest entry in Billing for the reservation.
 
 
 -- Guest registered with luxuryRentals.
