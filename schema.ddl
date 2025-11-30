@@ -15,6 +15,8 @@ We couldn't enforce the following constraints:
 - The constraint for Prices that the price_date for a price update
     occurs only at the beginning of the week (on a Saturday).
 
+- The constraint that reservations dates for the same property cannot overlap.
+
 
 
 ==Did not==
@@ -160,7 +162,8 @@ CREATE TABLE Reservation (
     num_guests INTEGER NOT NULL CHECK (num_guests >= 0)
 );
 
--- ADDITIONAL CONSTRAINT: num_guests <= capacity of the property
+-- ADDITIONAL CONSTRAINTS: num_guests <= capacity of the property
+-- Reservations for the same property cannot overlap in time.
 
 
 -- A table for the current prices of a property.
