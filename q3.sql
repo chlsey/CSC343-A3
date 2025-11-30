@@ -1,4 +1,6 @@
--- Host/ Hosts with the highest average host rating
+-- Host/ Hosts with the highest average host rating in LuxuryRentals
+SET SEARCH_PATH TO luxuryRentals, public;
+DROP TABLE IF EXISTS q3 cascade;
 
 CREATE TABLE q3(
     email_address VARCHAR,

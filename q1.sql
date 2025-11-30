@@ -1,4 +1,4 @@
--- Number of properties tha offer each luxury type
+-- Number of properties that offer each luxury type in LuxuryRentals
 
 SET SEARCH_PATH TO luxuryRentals, public;
 DROP TABLE IF EXISTS q1 cascade;
