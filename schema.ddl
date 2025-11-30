@@ -54,7 +54,7 @@ We made the following assumptions:
 
 DROP SCHEMA IF EXISTS luxuryRentals cascade;
 CREATE SCHEMA luxuryRentals;
-SET search_path TO luxuryRentals, public;
+SET search_path TO luxuryRentals;
 
 
 -- The Host of the property.

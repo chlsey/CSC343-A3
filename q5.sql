@@ -1,5 +1,5 @@
 -- Price ranges for each property listed in LuxuryRentals
-SET SEARCH_PATH TO luxuryRentals, public;
+SET SEARCH_PATH TO luxuryRentals;
 DROP TABLE IF EXISTS q5 cascade;
 
 CREATE TABLE q5(

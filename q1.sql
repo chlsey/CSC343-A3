@@ -1,6 +1,6 @@
 -- Number of properties that offer each luxury type in LuxuryRentals
 
-SET SEARCH_PATH TO luxuryRentals, public;
+SET SEARCH_PATH TO luxuryRentals;
 DROP TABLE IF EXISTS q1 cascade;
 
 CREATE TABLE q1(
