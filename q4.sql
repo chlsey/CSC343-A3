@@ -5,7 +5,7 @@ SET SEARCH_PATH TO luxuryRentals;
 DROP TABLE IF EXISTS q4 cascade;
 
 CREATE TABLE q4(
-    type VARCHAR CHECK (transit IN ('water', 'city', 'other')),
+    property_type VARCHAR CHECK (property_type IN ('water', 'city', 'other')),
     extra_guests INTEGER CHECK (extra_guests >= 0)
 );
 
@@ -59,21 +59,21 @@ EXCEPT (
 DROP VIEW IF EXISTS TypePropAvg CASCADE;
 
 CREATE VIEW TypePropAvg AS
-(SELECT 'water' AS type, AVG(r.num_extra) AS extra_guests
+(SELECT 'water' AS property_type, AVG(r.num_extra) AS extra_guests
 FROM ExtraGuestsRental r JOIN WaterProp w ON r.property_id = w.property_id)
 
 UNION
 
-(SELECT 'city' AS type, AVG(r.num_extra) AS extra_guests
+(SELECT 'city' AS property_type, AVG(r.num_extra) AS extra_guests
 FROM ExtraGuestsRental r JOIN CityProp w ON r.property_id = w.property_id)
 
 UNION
-(SELECT 'other' AS type, AVG(r.num_extra) AS extra_guests
-FROM ExtraGuestsRental r JOIN OtherProp w ON r.property_id = w.property_id));
+(SELECT 'other' AS property_type, AVG(r.num_extra) AS extra_guests
+FROM ExtraGuestsRental r JOIN OtherProp w ON r.property_id = w.property_id);
 
 
 
 -- Answer: 
 INSERT INTO q4
-SELECT type, extra_guests
+SELECT property_type, extra_guests
 FROM TypePropAvg;
