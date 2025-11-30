@@ -41,8 +41,7 @@ FROM CityType c;
 DROP VIEW IF EXISTS OtherProp CASCADE;
 
 CREATE VIEW OtherProp AS
-((SELECT property_id
-FROM Property)
+((SELECT property_id FROM Property)
 
 EXCEPT (
     SELECT property_id FROM WaterProp

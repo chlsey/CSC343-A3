@@ -59,7 +59,7 @@ DROP VIEW IF EXISTS AllAverages CASCADE;
 
 CREATE VIEW AllAverages AS
 (SELECT 'at' AS capacity, AVG(r.average_rate) AS average_rating, 
-    count(reservation_id) AS num_rentals
+    count(r.reservation_id) AS num_rentals
     FROM AtCapacity a
     JOIN RentalRatings r ON a.reservation_id = r.reservation_id
 )
@@ -67,7 +67,7 @@ CREATE VIEW AllAverages AS
 UNION
 
 (SELECT 'below' AS capacity, AVG(r.average_rate) AS average_rating, 
-    count(reservation_id) AS num_rentals
+    count(r.reservation_id) AS num_rentals
     FROM BelowCapacity a
     JOIN RentalRatings r ON a.reservation_id = r.reservation_id
 );
