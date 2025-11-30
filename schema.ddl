@@ -147,7 +147,7 @@ CREATE TABLE Reservation (
     property_id INTEGER NOT NULL,
     start_date TIMESTAMP NOT NULL,
     rental_weeks INTEGER NOT NULL,
-    num_guests INTEGER NOT NULL CHECK (num_guests >= 0),
+    num_guests INTEGER NOT NULL CHECK (num_guests >= 0)
 );
 
 -- ADDITIONAL CONSTRAINTS: num_guests <= capacity of the property
@@ -162,7 +162,7 @@ CREATE TABLE Reservation (
 -- <rates> denotes the per week rental price of the property.
 CREATE TABLE Prices (
     property_id INTEGER PRIMARY KEY REFERENCES Property,
-    rates REAL NOT NULL,
+    rates REAL NOT NULL
 );
 
 
