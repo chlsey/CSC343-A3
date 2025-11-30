@@ -162,9 +162,8 @@ CREATE TABLE Reservation (
 -- <property_id> denotes the id of the property.
 -- <rates> denotes the per week rental price of the property.
 CREATE TABLE Prices (
-    property_id INTEGER REFERENCES Property,
+    property_id INTEGER PRIMARY KEY REFERENCES Property,
     rates REAL NOT NULL,
-    PRIMARY KEY(property_id, price_date)
 );
 
 
