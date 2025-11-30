@@ -17,12 +17,11 @@ CREATE TABLE q2(
 DROP VIEW IF EXISTS NumGuestsPerReservation CASCADE;
 
 CREATE VIEW NumGuestsPerReservation AS
-SELECT r.reservation_id, count(s.stay_id) AS num_guests, p.capacity
+SELECT r.reservation_id, count(s.stay_id) AS num_guests, AVG(p.capacity)
 FROM Reservation r
 JOIN Stay s ON r.reservation_id = s.reservation_id
 JOIN Property p ON r.property_id = p.property_id
 GROUP BY r.reservation_id;
--- should be fine since each reservation id only has one property id
 
 
 
