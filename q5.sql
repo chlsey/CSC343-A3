@@ -1,5 +1,5 @@
 -- Price ranges for each property listed in LuxuryRentals
-SET SEARCH_PATH TO luxuryRentals;
+SET SEARCH_PATH TO luxuryRentals
 DROP TABLE IF EXISTS q5 cascade;
 
 CREATE TABLE q5(
@@ -45,5 +45,5 @@ SELECT
     CASE
         WHEN price_range = (SELECT max_price_range FROM MaxPriceRange) THEN '*'
         ELSE ''
-    END AS largest_range,
+    END AS largest_range
 FROM PropertyPriceBreakdown;

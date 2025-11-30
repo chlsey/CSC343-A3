@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS q3 cascade;
 CREATE TABLE q3(
     email_address VARCHAR,
     num_host_ratings INTEGER,
-    avg_host_rating FLOAT,
+    avg_host_rating NUMERIC,
     highest_price INTEGER
 );
 
@@ -28,14 +28,14 @@ JOIN Host h ON p.host_id = h.host_id;
 CREATE VIEW HostAvgRatings AS
 SELECT hr.host_id, hr.email_address, 
        COUNT(*) AS num_host_ratings,
-       AVG(h*) AS avg_host_rating
+       AVG(star_rating) AS avg_host_rating
 FROM HostRatings hr
 GROUP BY hr.host_id, hr.email_address
 HAVING COUNT(*) >= 10;
 
 -- Prices of properties and their respective hosts
 CREATE VIEW PropertyPrices AS
-SELECT pr.host_id, pr.rates, p.property_id
+SELECT pr.host_id, p.rates, p.property_id
 FROM Property pr
 JOIN Prices p ON pr.property_id = p.property_id;
 
@@ -48,7 +48,7 @@ JOIN PropertyPrices pp ON har.host_id = pp.host_id
 GROUP BY har.host_id, har.email_address, har.num_host_ratings, har.avg_host_rating;
 
 INSERT INTO q3
-Select *
+Select email_address, num_host_ratings, avg_host_rating, highest_price
 FROM ValidHosts
 WHERE avg_host_rating = (
     SELECT MAX(avg_host_rating)
