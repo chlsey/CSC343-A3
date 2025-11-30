@@ -12,10 +12,10 @@ We couldn't enforce the following constraints:
 - The constraint that the age of the renter of the property/reservation
      is 18 by the start date of the reservation.
 
-- The constraint for Prices that the price_date for a price update
-    occurs only at the beginning of the week (on a Saturday).
-
 - The constraint that reservations dates for the same property cannot overlap.
+
+-- The constraint that there must be one entry in the OfficialRenter table for 
+    each reservation (reservation_id).
 
 
 
@@ -30,10 +30,6 @@ We couldn't enforce the following constraints:
 
 
 ==Extra Constraints==
-- Every recorded price in Prices is at the start of a week (couldn't 
-    actually implement this). We wanted to implement this so that prices are
-    not too unstable, which would make it hard to pay for the rental.
-
 - The renter cannot leave a comment on a host, only a rating. We enforced this
     because the guest can just leave a comment on the host in the property 
     comment rating.
@@ -46,13 +42,8 @@ We made the following assumptions:
 
 - The start date of a rental period does not have to start on a Saturday.
 
-- We only keep track of property prices per week at the start of the week, 
-    so prices for properties cannot change in the middle of a week.
-
-- Billing information is not recorded in the Reservation table nor 
-    OfficialRenter since it's unclear whether renters pay before 
-    rental period is over, or if prices can change throughout the 
-    actual rental period.
+- We only keep track of billed prices by the week, so prices for properties 
+    cannot change in the middle of a week.
 
 - A property does not have to be a City Property or a Water Property.
 
@@ -159,24 +150,37 @@ CREATE TABLE Reservation (
     property_id INTEGER NOT NULL,
     start_date TIMESTAMP NOT NULL,
     rental_weeks INTEGER NOT NULL,
-    num_guests INTEGER NOT NULL CHECK (num_guests >= 0)
+    num_guests INTEGER NOT NULL CHECK (num_guests >= 0),
 );
 
 -- ADDITIONAL CONSTRAINTS: num_guests <= capacity of the property
 -- Reservations for the same property cannot overlap in time.
+-- There must be one entry in the OfficialRenter table for reservation_id.
 
 
 -- A table for the current prices of a property.
 -- <property_id> denotes the id of the property.
--- <price_date> denotes the date of the price update for the property.
 -- <rates> denotes the per week rental price of the property.
 CREATE TABLE Prices (
     property_id INTEGER REFERENCES Property,
-    price_date TIMESTAMP NOT NULL,
     rates REAL NOT NULL,
     PRIMARY KEY(property_id, price_date)
 );
--- ADDITIONAL CONSTRAINT: price_date can only be the date of a Saturday.
+
+
+-- A table for the billing details of a reservation.
+-- <billing_id> denotes the unique identifier for each billing record.
+-- <reservation_id> denotes the reservation this billing entry belongs to.
+-- <week_start> denotes the start date of the billed week.
+-- <week_end> denotes the end date of the billed week.
+-- <price> denotes the price charged for this specific week.
+CREATE TABLE Billing (
+    billing_id INTEGER PRIMARY KEY,
+    reservation_id INTEGER REFERENCES Reservation,
+    week_start DATE NOT NULL,
+    week_end DATE NOT NULL,
+    price REAL NOT NULL CHECK (price >= 0)
+);
 
 
 -- Guest registered with luxuryRentals.
@@ -211,7 +215,7 @@ CREATE TABLE OfficialRenter (
     card_num INTEGER NOT NULL
 );
 -- ADDITIONAL CONSTRAINT: age of (stay_id in Stay) renter must be 18 by 
--- the start date of the reservation (stay_id in Stay).
+-- the start date of the reservation (stay_id in Stay)
 
 
 
